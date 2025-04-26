@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Dog Pet Simulator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f7f9fc;
+        }
+        
+        .pet-container {
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .pet {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+        
+        .pet-status {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-bar {
+            width: 100%;
+            height: 15px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .status-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .hunger .status-fill {
+            background-color: #ff9800;
+        }
+        
+        .happiness .status-fill {
+            background-color: #4caf50;
+        }
+        
+        .energy .status-fill {
+            background-color: #2196f3;
+        }
+        
+        .status-item {
+            flex: 1;
+            margin: 0 5px;
+        }
+        
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #375785;
+        }
+        
+        .message {
+            min-height: 60px;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .thought-bubble {
+            position: absolute;
+            top: -80px;
+            right: 50px;
+            background-color: white;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .thought-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            right: 20px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .thought-bubble.show {
+            opacity: 1;
+        }
+        
+        .emoji {
+            font-size: 24px;
+        }
+        
+        .pet-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4a6fa5;
+        }
+        
+        .stats {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Virtual Dog Pet Simulator</h1>
+    
+    <div class="pet-name" id="petName">Buddy</div>
+    
+    <div class="pet-container">
+        <div class="thought-bubble" id="thoughtBubble">
+            <span class="emoji" id="thoughtEmoji">💭</span>
+        </div>
+        <div class="pet" id="pet">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+                <!-- Body -->
+                <ellipse cx="100" cy="120" rx="70" ry="50" fill="#d4a76a" id="petBody" />
+                
+                <!-- Head -->
+                <circle cx="100" cy="70" r="40" fill="#e0b67c" id="petHead" />
+                
+                <!-- Ears -->
+                <ellipse cx="70" cy="45" rx="15" ry="25" fill="#d4a76a" transform="rotate(-15, 70, 45)" />
+                <ellipse cx="130" cy="45" rx="15" ry="25" fill="#d4a76a" transform="rotate(15, 130, 45)" />
+                
+                <!-- Eyes -->
+                <circle cx="85" cy="65" r="6" fill="white" id="leftEye" />
+                <circle cx="115" cy="65" r="6" fill="white" id="rightEye" />
+                
+                <!-- Pupils -->
+                <circle cx="85" cy="65" r="3" fill="black" id="leftPupil" />
+                <circle cx="115" cy="65" r="3" fill="black" id="rightPupil" />
+                
+                <!-- Nose -->
+                <ellipse cx="100" cy="80" rx="8" ry="6" fill="#333" id="nose" />
+                
+                <!-- Mouth -->
+                <path d="M90,90 Q100,100 110,90" stroke="#333" stroke-width="2" fill="transparent" id="mouth" />
+                
+                <!-- Tail -->
+                <path d="M170,115 Q190,100 180,85" stroke="#d4a76a" stroke-width="15" stroke-linecap="round" fill="transparent" id="tail" />
+                
+                <!-- Legs -->
+                <rect x="70" y="150" width="15" height="30" rx="7" fill="#d4a76a" />
+                <rect x="115" y="150" width="15" height="30" rx="7" fill="#d4a76a" />
+            </svg>
+        </div>
+    </div>
+    
+    <div class="pet-status">
+        <div class="status-item hunger">
+            <div>Hunger</div>
+            <div class="status-bar">
+                <div class="status-fill" id="hungerBar" style="width: 100%;"></div>
+            </div>
+        </div>
+        <div class="status-item happiness">
+            <div>Happiness</div>
+            <div class="status-bar">
+                <div class="status-fill" id="happinessBar" style="width: 100%;"></div>
+            </div>
+        </div>
+        <div class="status-item energy">
+            <div>Energy</div>
+            <div class="status-bar">
+                <div class="status-fill" id="energyBar" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button id="feedBtn">Feed 🍖</button>
+        <button id="playBtn">Play 🎾</button>
+        <button id="sleepBtn">Sleep 💤</button>
+        <button id="petBtn">Pet 👋</button>
+        <button id="trainBtn">Train 🧠</button>
+        <button id="cleanBtn">Clean 🧹</button>
+    </div>
+    
+    <div class="message" id="message">
+        Welcome to your virtual pet! What would you like to do with Buddy?
+    </div>
+    
+    <div class="stats" id="stats">
+        Age: 0 days | Level: 1 | Skills: 0
+    </div>
+
+    <script>
+        // Pet stats
+        let pet = {
+            name: "Buddy",
+            hunger: 100,
+            happiness: 100,
+            energy: 100,
+            age: 0,
+            level: 1,
+            skills: 0,
+            isSleeping: false,
+            lastUpdate: Date.now()
+        };
+        
+        // Get button elements
+        const feedBtn = document.getElementById("feedBtn");
+        const playBtn = document.getElementById("playBtn");
+        const sleepBtn = document.getElementById("sleepBtn");
+        const petBtn = document.getElementById("petBtn");
+        const trainBtn = document.getElementById("trainBtn");
+        const cleanBtn = document.getElementById("cleanBtn");
+        
+        // Add event listeners to buttons
+        feedBtn.addEventListener("click", feed);
+        playBtn.addEventListener("click", play);
+        sleepBtn.addEventListener("click", sleep);
+        petBtn.addEventListener("click", petDog);
+        trainBtn.addEventListener("click", train);
+        cleanBtn.addEventListener("click", clean);
+        
+        // Update pet stats every second
+        setInterval(updatePet, 1000);
+        
+        // Initialize
+        updateUI();
+        startIdleAnimation();
+        
+        // Update pet stats based on time passed
+        function updatePet() {
+            if (pet.isSleeping) {
+                pet.energy = Math.min(100, pet.energy + 2);
+                if (pet.energy >= 100) {
+                    pet.isSleeping = false;
+                    showMessage(pet.name + " wakes up feeling refreshed!");
+                    updatePetAppearance();
+                }
+            } else {
+                // Decrease stats over time
+                pet.hunger = Math.max(0, pet.hunger - 0.2);
+                pet.happiness = Math.max(0, pet.happiness - 0.3);
+                pet.energy = Math.max(0, pet.energy - 0.15);
+                
+                // Increase age every 60 seconds (1 day in pet time)
+                if (Date.now() - pet.lastUpdate > 60000) {
+                    pet.age++;
+                    pet.lastUpdate = Date.now();
+                    showMessage(pet.name + " is now " + pet.age + " days old!");
+                    
+                    // Level up every 7 days
+                    if (pet.age % 7 === 0) {
+                        pet.level++;
+                        showThought("🎉");
+                        showMessage(pet.name + " leveled up to level " + pet.level + "!");
+                    }
+                }
+                
+                // Check if pet needs attention
+                checkPetNeeds();
+            }
+            
+            updateUI();
+        }
+        
+        // Check if pet needs attention
+        function checkPetNeeds() {
+            if (pet.hunger < 20) {
+                showThought("🍖");
+                document.getElementById("petBody").setAttribute("fill", "#c39a62");
+                document.getElementById("petHead").setAttribute("fill", "#d0a772");
+            } else if (pet.happiness < 20) {
+                showThought("😢");
+                document.getElementById("mouth").setAttribute("d", "M90,95 Q100,85 110,95");
+            } else if (pet.energy < 20) {
+                showThought("😴");
+            } else {
+                hideThought();
+                updatePetAppearance();
+            }
+        }
+        
+        // Reset pet appearance
+        function updatePetAppearance() {
+            document.getElementById("petBody").setAttribute("fill", "#d4a76a");
+            document.getElementById("petHead").setAttribute("fill", "#e0b67c");
+            
+            if (pet.happiness > 80) {
+                document.getElementById("mouth").setAttribute("d", "M85,90 Q100,100 115,90");
+            } else if (pet.happiness < 30) {
+                document.getElementById("mouth").setAttribute("d", "M90,95 Q100,85 110,95");
+            } else {
+                document.getElementById("mouth").setAttribute("d", "M90,90 Q100,100 110,90");
+            }
+            
+            if (pet.isSleeping) {
+                document.getElementById("leftEye").setAttribute("d", "M80,65 L90,65");
+                document.getElementById("rightEye").setAttribute("d", "M110,65 L120,65");
+                document.getElementById("leftPupil").setAttribute("opacity", "0");
+                document.getElementById("rightPupil").setAttribute("opacity", "0");
+                showThought("💤");
+            } else {
+                document.getElementById("leftEye").removeAttribute("d");
+                document.getElementById("rightEye").removeAttribute("d");
+                document.getElementById("leftPupil").removeAttribute("opacity");
+                document.getElementById("rightPupil").removeAttribute("opacity");
+            }
+        }
+        
+        // Update UI elements
+        function updateUI() {
+            document.getElementById("hungerBar").style.width = pet.hunger + "%";
+            document.getElementById("happinessBar").style.width = pet.happiness + "%";
+            document.getElementById("energyBar").style.width = pet.energy + "%";
+            document.getElementById("stats").textContent = "Age: " + pet.age + " days | Level: " + pet.level + " | Skills: " + pet.skills;
+            
+            // Change color of status bars based on value
+            if (pet.hunger < 30) {
+                document.getElementById("hungerBar").style.backgroundColor = "#f44336";
+            } else {
+                document.getElementById("hungerBar").style.backgroundColor = "#ff9800";
+            }
+            
+            if (pet.happiness < 30) {
+                document.getElementById("happinessBar").style.backgroundColor = "#f44336";
+            } else {
+                document.getElementById("happinessBar").style.backgroundColor = "#4caf50";
+            }
+            
+            if (pet.energy < 30) {
+                document.getElementById("energyBar").style.backgroundColor = "#f44336";
+            } else {
+                document.getElementById("energyBar").style.backgroundColor = "#2196f3";
+            }
+        }
+        
+        // Show message
+        function showMessage(text) {
+            document.getElementById("message").textContent = text;
+        }
+        
+        // Show thought bubble
+        function showThought(emoji) {
+            document.getElementById("thoughtEmoji").textContent = emoji;
+            document.getElementById("thoughtBubble").classList.add("show");
+        }
+        
+        // Hide thought bubble
+        function hideThought() {
+            document.getElementById("thoughtBubble").classList.remove("show");
+        }
+        
+        // Feed pet
+        function feed() {
+            if (pet.isSleeping) {
+                showMessage(pet.name + " is sleeping. Maybe wait until they wake up?");
+                return;
+            }
+            
+            pet.hunger = Math.min(100, pet.hunger + 30);
+            showMessage("You fed " + pet.name + ". Yum!");
+            showThought("😋");
+            animatePet("feed");
+            setTimeout(hideThought, 2000);
+        }
+        
+        // Play with pet
+        function play() {
+            if (pet.isSleeping) {
+                showMessage(pet.name + " is sleeping. Maybe wait until they wake up?");
+                return;
+            }
+            
+            if (pet.energy < 20) {
+                showMessage(pet.name + " is too tired to play right now.");
+                showThought("😴");
+                setTimeout(hideThought, 2000);
+                return;
+            }
+            
+            pet.happiness = Math.min(100, pet.happiness + 25);
+            pet.energy = Math.max(0, pet.energy - 15);
+            showMessage("You played with " + pet.name + ". So much fun!");
+            showThought("🎾");
+            animatePet("play");
+            setTimeout(hideThought, 2000);
+        }
+        
+        // Put pet to sleep
+        function sleep() {
+            if (pet.isSleeping) {
+                showMessage(pet.name + " is already sleeping.");
+                return;
+            }
+            
+            pet.isSleeping = true;
+            showMessage(pet.name + " is now sleeping. Zzz...");
+            updatePetAppearance();
+        }
+        
+        // Pet your pet (renamed to avoid name collision)
+        function petDog() {
+            if (pet.isSleeping) {
+                pet.isSleeping = false;
+                showMessage("You woke " + pet.name + " up by petting them!");
+                updatePetAppearance();
+                return;
+            }
+            
+            pet.happiness = Math.min(100, pet.happiness + 10);
+            showMessage("You pet " + pet.name + ". They look happy!");
+            showThought("❤️");
+            animatePet("pet");
+            setTimeout(hideThought, 2000);
+        }
+        
+        // Train pet
+        function train() {
+            if (pet.isSleeping) {
+                showMessage(pet.name + " is sleeping. Maybe wait until they wake up?");
+                return;
+            }
+            
+            if (pet.energy < 30) {
+                showMessage(pet.name + " is too tired to train right now.");
+                showThought("😴");
+                setTimeout(hideThought, 2000);
+                return;
+            }
+            
+            pet.skills++;
+            pet.energy = Math.max(0, pet.energy - 20);
+            showMessage("You trained " + pet.name + ". They learned something new!");
+            showThought("🧠");
+            animatePet("train");
+            setTimeout(hideThought, 2000);
+        }
+        
+        // Clean pet
+        function clean() {
+            if (pet.isSleeping) {
+                showMessage(pet.name + " is sleeping. Maybe wait until they wake up?");
+                return;
+            }
+            
+            showMessage("You cleaned " + pet.name + ". They look shiny and fresh!");
+            showThought("🚿");
+            animatePet("clean");
+            setTimeout(hideThought, 2000);
+        }
+        
+        // Animate pet based on action
+        function animatePet(action) {
+            const petElement = document.getElementById("pet");
+            const tail = document.getElementById("tail");
+            
+            switch(action) {
+                case "feed":
+                    petElement.style.transform = "translateY(5px)";
+                    setTimeout(() => {
+                        petElement.style.transform = "translateY(0)";
+                    }, 300);
+                    break;
+                case "play":
+                    petElement.style.transform = "rotate(5deg)";
+                    setTimeout(() => {
+                        petElement.style.transform = "rotate(-5deg)";
+                    }, 150);
+                    setTimeout(() => {
+                        petElement.style.transform = "rotate(0)";
+                    }, 300);
+                    break;
+                case "pet":
+                    tail.style.transform = "rotate(10deg)";
+                    setTimeout(() => {
+                        tail.style.transform = "rotate(-10deg)";
+                    }, 150);
+                    setTimeout(() => {
+                        tail.style.transform = "rotate(0)";
+                    }, 300);
+                    break;
+                case "train":
+                    petElement.style.transform = "scale(1.05)";
+                    setTimeout(() => {
+                        petElement.style.transform = "scale(1)";
+                    }, 300);
+                    break;
+                case "clean":
+                    petElement.style.filter = "brightness(1.2)";
+                    setTimeout(() => {
+                        petElement.style.filter = "brightness(1)";
+                    }, 500);
+                    break;
+            }
+        }
+        
+        // Start idle animation
+        function startIdleAnimation() {
+            const tail = document.getElementById("tail");
+            
+            // Wag tail every few seconds
+            setInterval(() => {
+                if (!pet.isSleeping && Math.random() > 0.5) {
+                    tail.style.transform = "rotate(5deg)";
+                    setTimeout(() => {
+                        tail.style.transform = "rotate(-5deg)";
+                    }, 200);
+                    setTimeout(() => {
+                        tail.style.transform = "rotate(0)";
+                    }, 400);
+                }
+            }, 5000);
+            
+            // Blink occasionally
+            setInterval(() => {
+                if (!pet.isSleeping && Math.random() > 0.7) {
+                    document.getElementById("leftEye").setAttribute("fill", "#e0b67c");
+                    document.getElementById("rightEye").setAttribute("fill", "#e0b67c");
+                    document.getElementById("leftPupil").setAttribute("fill", "#e0b67c");
+                    document.getElementById("rightPupil").setAttribute("fill", "#e0b67c");
+                    
+                    setTimeout(() => {
+                        document.getElementById("leftEye").setAttribute("fill", "white");
+                        document.getElementById("rightEye").setAttribute("fill", "white");
+                        document.getElementById("leftPupil").setAttribute("fill", "black");
+                        document.getElementById("rightPupil").setAttribute("fill", "black");
+                    }, 150);
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
